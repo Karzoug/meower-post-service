@@ -1,0 +1,58 @@
+services:
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    networks:
+      - proxy-network
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+    # ports:
+    #   - 9090:9090
+    restart: unless-stopped
+    volumes:
+      - ./metric/prometheus:/etc/prometheus
+      # - prom_data:/prometheus
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.60
+    container_name: jaeger
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    hostname: jaeger
+    networks:
+      - proxy-network
+    ports:
+      - 16686:16686
+    #   - 4317:4317
+    #   - 4318:4318
+    #   - 14268:14268
+    restart: unless-stopped
+
+  post-service:
+    depends_on:
+      prometheus:
+        condition: service_started
+      jaeger:
+        condition: service_started
+    build:
+      dockerfile: ./deploy/Dockerfile
+      context: ./../
+      args:
+        - VERSION=${VERSION}
+        - BUILD_DATE=${BUILD_DATE}
+        - COMMIT_HASH=${COMMIT_HASH}
+    container_name: api.post.meower
+    networks:
+      - proxy-network
+    env_file:
+      - .env
+    # ports:
+    #   - 9001:9001
+    restart: unless-stopped
+
+volumes:
+  # prom_data:
+
+networks:
+  proxy-network:
+    name: local

@@ -1,0 +1,9 @@
+@hostname = localhost
+@port = 9001
+@baseUrl = http://{{hostname}}:{{port}}/api/posts/v1
+
+GET http://{{hostname}}:{{port}}/healthcheck
+
+###
+
+GET http://{{hostname}}:{{port}}/buildinfo

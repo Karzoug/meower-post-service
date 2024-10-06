@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+option go_package = "internal/delivery/grpc/gen";
+
+// import "google/protobuf/timestamp.proto";
+
+package gen;
+
+service Post {
+  }

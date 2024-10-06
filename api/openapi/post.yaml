@@ -1,0 +1,32 @@
+openapi: 3.0.1
+info:
+  version: 0.1.0
+  title: Meower Post Service API
+  description: API for CRUD operations on user posts.
+
+servers:
+  - url: https://meower.com/{basePath}
+    description: The production API server
+    variables:
+      basePath:
+        default: api/posts/v1
+
+security:
+  - bearerAuth: []
+
+paths:
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+          description: Description of the error
+      required:
+        - error
