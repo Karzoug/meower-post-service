@@ -68,7 +68,7 @@ func Run(ctx context.Context, logger zerolog.Logger) error {
 	defer doClose(shutdownMeter, logger)
 
 	// set up service
-	ps := service.NewPostService()
+	ps := service.NewPostService(nil)
 
 	grpcSrv := grpcServer.New(
 		cfg.GRPC,
