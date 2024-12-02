@@ -14,6 +14,8 @@ import (
 	"github.com/Karzoug/meower-common-go/trace/otlp"
 
 	"github.com/Karzoug/meower-post-service/internal/config"
+	healthHandler "github.com/Karzoug/meower-post-service/internal/delivery/grpc/handler/health"
+	postHandler "github.com/Karzoug/meower-post-service/internal/delivery/grpc/handler/post"
 	grpcServer "github.com/Karzoug/meower-post-service/internal/delivery/grpc/server"
 	"github.com/Karzoug/meower-post-service/internal/post/service"
 	"github.com/Karzoug/meower-post-service/pkg/buildinfo"
@@ -47,9 +49,8 @@ func Run(ctx context.Context, logger zerolog.Logger) error {
 	// set up tracer
 	cfg.OTLP.ServiceName = serviceName
 	cfg.OTLP.ServiceVersion = serviceVersion
-	cfg.OTLP.ExcludedRoutes = map[string]struct{}{
-		"/readiness": {},
-		"/liveness":  {},
+	cfg.OTLP.ExcludedGrpcMethods = map[string]string{
+		"/grpc.health.v1.Health/Check": "health check",
 	}
 	shutdownTracer, err := otlp.RegisterGlobal(ctxInit, cfg.OTLP)
 	if err != nil {
@@ -67,11 +68,14 @@ func Run(ctx context.Context, logger zerolog.Logger) error {
 	defer doClose(shutdownMeter, logger)
 
 	// set up service
-	_ = service.NewPostService()
+	ps := service.NewPostService()
 
 	grpcSrv := grpcServer.New(
 		cfg.GRPC,
-		[]grpcServer.ServiceRegister{},
+		[]grpcServer.ServiceRegister{
+			healthHandler.RegisterService(),
+			postHandler.RegisterService(ps),
+		},
 		tracer,
 		logger,
 	)
