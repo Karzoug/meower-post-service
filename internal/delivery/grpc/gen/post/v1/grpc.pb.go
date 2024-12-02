@@ -216,6 +216,7 @@ type ListPostsRequest struct {
 	PageToken string `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
 	// The maximum number of followings to return. The service may return fewer than
 	// this value. If unspecified, at most 100 items will be returned.
+	// The maximum value is 100; values above 100 will be coerced to 100.
 	PageSize int32 `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 }
 
@@ -338,7 +339,8 @@ type ListPostIdProjectionsRequest struct {
 	// the call that provided the page token.
 	PageToken string `protobuf:"bytes,2,opt,name=page_token,json=pageToken,proto3" json:"page_token,omitempty"`
 	// The maximum number of followings to return. The service may return fewer than
-	// this value. If unspecified, at most 1000 items will be returned.
+	// this value. If unspecified, at most 100 items will be returned.
+	// The maximum value is 1000; values above 1000 will be coerced to 1000.
 	PageSize int32 `protobuf:"varint,3,opt,name=page_size,json=pageSize,proto3" json:"page_size,omitempty"`
 }
 

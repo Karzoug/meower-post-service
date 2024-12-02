@@ -11,12 +11,14 @@ import (
 	"golang.org/x/sync/errgroup"
 
 	"github.com/Karzoug/meower-common-go/metric/prom"
+	"github.com/Karzoug/meower-common-go/mongo"
 	"github.com/Karzoug/meower-common-go/trace/otlp"
 
 	"github.com/Karzoug/meower-post-service/internal/config"
 	healthHandler "github.com/Karzoug/meower-post-service/internal/delivery/grpc/handler/health"
 	postHandler "github.com/Karzoug/meower-post-service/internal/delivery/grpc/handler/post"
 	grpcServer "github.com/Karzoug/meower-post-service/internal/delivery/grpc/server"
+	postMongo "github.com/Karzoug/meower-post-service/internal/post/repo/mongo"
 	"github.com/Karzoug/meower-post-service/internal/post/service"
 	"github.com/Karzoug/meower-post-service/pkg/buildinfo"
 )
@@ -26,6 +28,7 @@ const (
 	metricNamespace = "post_service"
 	pkgName         = "github.com/Karzoug/meower-post-service"
 	initTimeout     = 10 * time.Second
+	shutdownTimeout = 10 * time.Second
 )
 
 var serviceVersion = buildinfo.Get().ServiceVersion
@@ -50,7 +53,7 @@ func Run(ctx context.Context, logger zerolog.Logger) error {
 	cfg.OTLP.ServiceName = serviceName
 	cfg.OTLP.ServiceVersion = serviceVersion
 	cfg.OTLP.ExcludedGrpcMethods = map[string]string{
-		"/grpc.health.v1.Health/Check": "health check",
+		"grpc.health.v1.Health": "Check",
 	}
 	shutdownTracer, err := otlp.RegisterGlobal(ctxInit, cfg.OTLP)
 	if err != nil {
@@ -67,8 +70,14 @@ func Run(ctx context.Context, logger zerolog.Logger) error {
 	}
 	defer doClose(shutdownMeter, logger)
 
+	db, mongoClose, err := mongo.New(ctxInit, cfg.Mongo, serviceName)
+	if err != nil {
+		return err
+	}
+	defer doClose(mongoClose, logger)
+
 	// set up service
-	ps := service.NewPostService(nil)
+	ps := service.NewPostService(postMongo.NewPostRepo(db))
 
 	grpcSrv := grpcServer.New(
 		cfg.GRPC,
@@ -94,7 +103,7 @@ func Run(ctx context.Context, logger zerolog.Logger) error {
 }
 
 func doClose(fn func(context.Context) error, logger zerolog.Logger) {
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 
 	if err := fn(ctx); err != nil {

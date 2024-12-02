@@ -107,7 +107,7 @@ func (h handlers) ListPosts(ctx context.Context, req *gen.ListPostsRequest) (*ge
 		token = tkn
 	}
 
-	posts, nextToken, err := h.postService.ListPosts(ctx,
+	posts, nextID, err := h.postService.ListPosts(ctx,
 		id,
 		service.ListPostsPagination{
 			Token: token,
@@ -118,9 +118,16 @@ func (h handlers) ListPosts(ctx context.Context, req *gen.ListPostsRequest) (*ge
 		return nil, err
 	}
 
+	var nextToken string
+	if nextID.IsNil() {
+		nextToken = ""
+	} else {
+		nextToken = nextID.String()
+	}
+
 	return &gen.ListPostsResponse{
 		Posts:         converter.ToProtoPosts(posts),
-		NextPageToken: nextToken.String(),
+		NextPageToken: nextToken,
 	}, nil
 }
 
@@ -147,7 +154,7 @@ func (h handlers) ListPostIdProjections(ctx context.Context, req *gen.ListPostId
 		token = tkn
 	}
 
-	projections, nextToken, err := h.postService.ListPostIDProjections(ctx,
+	projections, nextID, err := h.postService.ListPostIDProjections(ctx,
 		ids,
 		service.ListPostIDProjectionsPagination{
 			Token: token,
@@ -158,8 +165,15 @@ func (h handlers) ListPostIdProjections(ctx context.Context, req *gen.ListPostId
 		return nil, err
 	}
 
+	var nextToken string
+	if nextID.IsNil() {
+		nextToken = ""
+	} else {
+		nextToken = nextID.String()
+	}
+
 	return &gen.ListPostIdProjectionsResponse{
 		PostIdProjections: converter.ToProtoPostIDProjections(projections),
-		NextPageToken:     nextToken.String(),
+		NextPageToken:     nextToken,
 	}, nil
 }

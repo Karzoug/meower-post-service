@@ -9,7 +9,7 @@ import (
 )
 
 type repository interface {
-	// Create creates a new post.
+	// Create creates a new post. ID is auto-generated.
 	Create(ctx context.Context, post *entity.Post) error
 	// GetOne finds post by ID.
 	GetOne(ctx context.Context, id xid.ID) (entity.Post, error)

@@ -29,19 +29,19 @@ func NewPostService(repo repository) PostService {
 
 // CreatePost creates a new post.
 func (ps PostService) CreatePost(ctx context.Context, post entity.Post) (entity.Post, error) {
-	if auth.UserIDFromContext(ctx).Compare(post.AuthorID) != 0 {
-		return entity.Post{}, ucerr.NewError(
-			nil,
-			"cannot create post for another user",
-			codes.PermissionDenied,
-		)
-	}
-
 	if err := validator.Struct(post); err != nil {
 		return entity.Post{}, ucerr.NewError(
 			err,
 			"invalid post format: "+err.Error(),
 			codes.InvalidArgument,
+		)
+	}
+
+	if auth.UserIDFromContext(ctx).Compare(post.AuthorID) != 0 {
+		return entity.Post{}, ucerr.NewError(
+			nil,
+			"cannot create post for another user",
+			codes.PermissionDenied,
 		)
 	}
 
@@ -100,12 +100,17 @@ func (ps PostService) BatchGetPosts(ctx context.Context, ids []xid.ID) ([]entity
 // ListPosts returns a list of posts by the author ID with pagination.
 // Deleted posts are omitted by default.
 func (ps PostService) ListPosts(ctx context.Context, authorID xid.ID, pgn ListPostsPagination) (posts []entity.Post, nextID xid.ID, err error) {
-	if err := validator.Struct(pgn); err != nil {
+	if pgn.Size < 0 {
 		return nil, xid.NilID(), ucerr.NewError(
-			err,
-			"invalid pagination parameters: "+err.Error(),
+			nil,
+			"invalid pagination parameter: negative size",
 			codes.InvalidArgument,
 		)
+	}
+	if pgn.Size == 0 {
+		pgn.Size = 100
+	} else if pgn.Size > 100 {
+		pgn.Size = 100
 	}
 
 	posts, nextID, err = ps.repo.List(ctx, authorID, pgn.Token, pgn.Size)
@@ -119,12 +124,17 @@ func (ps PostService) ListPosts(ctx context.Context, authorID xid.ID, pgn ListPo
 // ListPostIDProjections returns a list of post id projections by the author IDs with pagination.
 // Deleted posts are omitted by default.
 func (ps PostService) ListPostIDProjections(ctx context.Context, authorIDs []xid.ID, pgn ListPostIDProjectionsPagination) (projections []entity.PostIDProjection, nextID xid.ID, err error) {
-	if err := validator.Struct(pgn); err != nil {
+	if pgn.Size < 0 {
 		return nil, xid.NilID(), ucerr.NewError(
-			err,
-			"invalid pagination parameters: "+err.Error(),
+			nil,
+			"invalid pagination parameter: negative size",
 			codes.InvalidArgument,
 		)
+	}
+	if pgn.Size == 0 {
+		pgn.Size = 100
+	} else if pgn.Size > 1000 {
+		pgn.Size = 1000
 	}
 
 	projections, nextID, err = ps.repo.ListIDProjections(ctx, authorIDs, pgn.Token, pgn.Size)
