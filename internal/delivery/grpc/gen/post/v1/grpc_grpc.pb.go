@@ -12,6 +12,7 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
+	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -22,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion9
 const (
 	PostService_CreatePost_FullMethodName            = "/post.v1.PostService/CreatePost"
 	PostService_GetPost_FullMethodName               = "/post.v1.PostService/GetPost"
+	PostService_DeletePost_FullMethodName            = "/post.v1.PostService/DeletePost"
 	PostService_BatchGetPosts_FullMethodName         = "/post.v1.PostService/BatchGetPosts"
 	PostService_ListPosts_FullMethodName             = "/post.v1.PostService/ListPosts"
 	PostService_ListPostIdProjections_FullMethodName = "/post.v1.PostService/ListPostIdProjections"
@@ -40,6 +42,7 @@ const (
 type PostServiceClient interface {
 	CreatePost(ctx context.Context, in *CreatePostRequest, opts ...grpc.CallOption) (*Post, error)
 	GetPost(ctx context.Context, in *GetPostRequest, opts ...grpc.CallOption) (*Post, error)
+	DeletePost(ctx context.Context, in *DeletePostRequest, opts ...grpc.CallOption) (*emptypb.Empty, error)
 	BatchGetPosts(ctx context.Context, in *BatchGetPostsRequest, opts ...grpc.CallOption) (*BatchGetPostsResponse, error)
 	ListPosts(ctx context.Context, in *ListPostsRequest, opts ...grpc.CallOption) (*ListPostsResponse, error)
 	ListPostIdProjections(ctx context.Context, in *ListPostIdProjectionsRequest, opts ...grpc.CallOption) (*ListPostIdProjectionsResponse, error)
@@ -67,6 +70,16 @@ func (c *postServiceClient) GetPost(ctx context.Context, in *GetPostRequest, opt
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Post)
 	err := c.cc.Invoke(ctx, PostService_GetPost_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *postServiceClient) DeletePost(ctx context.Context, in *DeletePostRequest, opts ...grpc.CallOption) (*emptypb.Empty, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(emptypb.Empty)
+	err := c.cc.Invoke(ctx, PostService_DeletePost_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -116,6 +129,7 @@ func (c *postServiceClient) ListPostIdProjections(ctx context.Context, in *ListP
 type PostServiceServer interface {
 	CreatePost(context.Context, *CreatePostRequest) (*Post, error)
 	GetPost(context.Context, *GetPostRequest) (*Post, error)
+	DeletePost(context.Context, *DeletePostRequest) (*emptypb.Empty, error)
 	BatchGetPosts(context.Context, *BatchGetPostsRequest) (*BatchGetPostsResponse, error)
 	ListPosts(context.Context, *ListPostsRequest) (*ListPostsResponse, error)
 	ListPostIdProjections(context.Context, *ListPostIdProjectionsRequest) (*ListPostIdProjectionsResponse, error)
@@ -134,6 +148,9 @@ func (UnimplementedPostServiceServer) CreatePost(context.Context, *CreatePostReq
 }
 func (UnimplementedPostServiceServer) GetPost(context.Context, *GetPostRequest) (*Post, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetPost not implemented")
+}
+func (UnimplementedPostServiceServer) DeletePost(context.Context, *DeletePostRequest) (*emptypb.Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeletePost not implemented")
 }
 func (UnimplementedPostServiceServer) BatchGetPosts(context.Context, *BatchGetPostsRequest) (*BatchGetPostsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method BatchGetPosts not implemented")
@@ -197,6 +214,24 @@ func _PostService_GetPost_Handler(srv interface{}, ctx context.Context, dec func
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(PostServiceServer).GetPost(ctx, req.(*GetPostRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _PostService_DeletePost_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DeletePostRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(PostServiceServer).DeletePost(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: PostService_DeletePost_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(PostServiceServer).DeletePost(ctx, req.(*DeletePostRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -269,6 +304,10 @@ var PostService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetPost",
 			Handler:    _PostService_GetPost_Handler,
+		},
+		{
+			MethodName: "DeletePost",
+			Handler:    _PostService_DeletePost_Handler,
 		},
 		{
 			MethodName: "BatchGetPosts",

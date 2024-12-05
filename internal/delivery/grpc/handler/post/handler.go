@@ -6,6 +6,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
+	"google.golang.org/protobuf/types/known/emptypb"
 
 	"github.com/rs/xid"
 
@@ -62,6 +63,23 @@ func (h handlers) GetPost(ctx context.Context, req *gen.GetPostRequest) (*gen.Po
 	}
 
 	return converter.ToProtoPost(post), nil
+}
+
+func (h handlers) DeletePost(ctx context.Context, req *gen.DeletePostRequest) (*emptypb.Empty, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+
+	id, err := xid.FromString(req.Id)
+	if err != nil {
+		return nil, status.Error(codes.InvalidArgument, "invalid id: "+req.Id)
+	}
+
+	if err := h.postService.DeletePost(ctx, id); err != nil {
+		return nil, err
+	}
+
+	return &emptypb.Empty{}, nil
 }
 
 func (h handlers) BatchGetPosts(ctx context.Context, req *gen.BatchGetPostsRequest) (*gen.BatchGetPostsResponse, error) {
