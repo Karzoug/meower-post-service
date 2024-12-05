@@ -73,6 +73,48 @@ func (ps PostService) GetPost(ctx context.Context, id xid.ID) (entity.Post, erro
 	return post, nil
 }
 
+func (ps PostService) DeletePost(ctx context.Context, id xid.ID) error {
+	update := func(post *entity.Post) error {
+		if auth.UserIDFromContext(ctx).Compare(post.AuthorID) != 0 {
+			return ucerr.NewError(
+				nil,
+				"cannot delete post for another user",
+				codes.PermissionDenied,
+			)
+		}
+
+		if post.IsDeleted {
+			return repoerr.ErrNoAffected
+		}
+		post.IsDeleted = true
+
+		return nil
+	}
+
+	if err := ps.repo.Update(ctx, id, update); err != nil {
+		switch {
+		case errors.Is(err, repoerr.ErrNoAffected):
+			return nil
+		case errors.Is(err, repoerr.ErrRecordNotFound):
+			return ucerr.NewError(
+				nil,
+				"not found post",
+				codes.NotFound,
+			)
+		case errors.Is(err, repoerr.ErrAborted):
+			return ucerr.NewError(
+				nil,
+				"operation aborted: post not affected, try again",
+				codes.Aborted,
+			)
+		default:
+			return ucerr.NewInternalError(fmt.Errorf("repo error: %w", err))
+		}
+	}
+
+	return nil
+}
+
 // BatchGetPosts finds posts by IDs.
 func (ps PostService) BatchGetPosts(ctx context.Context, ids []xid.ID) ([]entity.Post, error) {
 	posts, err := ps.repo.GetMany(ctx, ids)

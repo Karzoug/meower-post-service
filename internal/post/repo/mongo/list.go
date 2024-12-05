@@ -15,18 +15,13 @@ import (
 
 // List returns a list of posts by the author ID.
 func (pr postRepo) List(ctx context.Context, authorID, fromID xid.ID, limit int) ([]entity.Post, xid.ID, error) {
-	filter := bson.D{
-		{
-			Key:   "author_id",
-			Value: authorID,
-		},
+	filter := bson.M{
+		"author_id": authorID,
+		"deleted":   false,
 	}
 
 	if !fromID.IsNil() {
-		filter = append(filter, bson.E{
-			Key:   "_id",
-			Value: bson.D{{Key: "$gte", Value: fromID}},
-		})
+		filter["_id"] = bson.D{{Key: "$gte", Value: fromID}}
 	}
 
 	cursor, err := pr.client.
@@ -72,20 +67,15 @@ func (pr postRepo) List(ctx context.Context, authorID, fromID xid.ID, limit int)
 
 // ListIDProjection returns a list of post id projections by the author IDs.
 func (pr postRepo) ListIDProjections(ctx context.Context, authorIDs []xid.ID, fromID xid.ID, limit int) ([]entity.PostIDProjection, xid.ID, error) {
-	filter := bson.D{
-		{
-			Key: "author_id",
-			Value: bson.M{
-				"$in": authorIDs,
-			},
+	filter := bson.M{
+		"author_id": bson.M{
+			"$in": authorIDs,
 		},
+		"deleted": false,
 	}
 
 	if !fromID.IsNil() {
-		filter = append(filter, bson.E{
-			Key:   "_id",
-			Value: bson.D{{Key: "$gte", Value: fromID}},
-		})
+		filter["_id"] = bson.D{{Key: "$gte", Value: fromID}}
 	}
 
 	cursor, err := pr.client.
