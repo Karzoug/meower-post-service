@@ -53,7 +53,7 @@ func (ps PostService) CreatePost(ctx context.Context, post entity.Post) (entity.
 }
 
 // GetPost finds post by ID.
-func (ps PostService) GetPost(ctx context.Context, id xid.ID) (entity.Post, error) {
+func (ps PostService) GetPost(ctx context.Context, reqUserID xid.ID, id xid.ID) (entity.Post, error) {
 	post, err := ps.repo.GetOne(ctx, id)
 	if err != nil {
 		if errors.Is(err, repoerr.ErrRecordNotFound) {
@@ -66,16 +66,16 @@ func (ps PostService) GetPost(ctx context.Context, id xid.ID) (entity.Post, erro
 		return entity.Post{}, ucerr.NewInternalError(fmt.Errorf("repo error: %w", err))
 	}
 
-	if post.IsDeleted && auth.UserIDFromContext(ctx).Compare(post.AuthorID) != 0 {
+	if post.IsDeleted && reqUserID.Compare(post.AuthorID) != 0 {
 		hideDataOfDeletedPost(&post)
 	}
 
 	return post, nil
 }
 
-func (ps PostService) DeletePost(ctx context.Context, id xid.ID) error {
+func (ps PostService) DeletePost(ctx context.Context, reqUserID xid.ID, id xid.ID) error {
 	update := func(post *entity.Post) error {
-		if auth.UserIDFromContext(ctx).Compare(post.AuthorID) != 0 {
+		if reqUserID.Compare(post.AuthorID) != 0 {
 			return ucerr.NewError(
 				nil,
 				"cannot delete post for another user",

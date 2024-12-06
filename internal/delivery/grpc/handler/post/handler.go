@@ -10,6 +10,7 @@ import (
 
 	"github.com/rs/xid"
 
+	"github.com/Karzoug/meower-common-go/auth"
 	"github.com/Karzoug/meower-post-service/internal/delivery/grpc/converter"
 	gen "github.com/Karzoug/meower-post-service/internal/delivery/grpc/gen/post/v1"
 	"github.com/Karzoug/meower-post-service/internal/post/service"
@@ -57,7 +58,7 @@ func (h handlers) GetPost(ctx context.Context, req *gen.GetPostRequest) (*gen.Po
 		return nil, status.Error(codes.InvalidArgument, "invalid id: "+req.Id)
 	}
 
-	post, err := h.postService.GetPost(ctx, id)
+	post, err := h.postService.GetPost(ctx, auth.UserIDFromContext(ctx), id)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +76,7 @@ func (h handlers) DeletePost(ctx context.Context, req *gen.DeletePostRequest) (*
 		return nil, status.Error(codes.InvalidArgument, "invalid id: "+req.Id)
 	}
 
-	if err := h.postService.DeletePost(ctx, id); err != nil {
+	if err := h.postService.DeletePost(ctx, auth.UserIDFromContext(ctx), id); err != nil {
 		return nil, err
 	}
 
