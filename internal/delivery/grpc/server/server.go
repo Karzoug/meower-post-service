@@ -2,7 +2,9 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"net"
+	"runtime/debug"
 
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
@@ -10,10 +12,8 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/credentials/insecure"
 	"google.golang.org/grpc/reflection"
-	"google.golang.org/grpc/status"
 
 	"github.com/Karzoug/meower-common-go/grpc/interceptor"
 
@@ -39,9 +39,8 @@ func New(cfg Config, serviceRegs []ServiceRegister, tracer trace.Tracer, logger 
 	}
 
 	recoveryOpts := []recovery.Option{
-		recovery.WithRecoveryHandler(func(p any) (err error) {
-			tracedLogger.Error().Any("error", p).Msg("panic triggered")
-			return status.Error(codes.Internal, "internal error: panic triggered")
+		recovery.WithRecoveryHandlerContext(func(ctx context.Context, p any) error {
+			return fmt.Errorf("recovered panic: %v; stack: %s", p, string(debug.Stack()))
 		}),
 	}
 
