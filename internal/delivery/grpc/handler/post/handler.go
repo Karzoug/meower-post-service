@@ -11,6 +11,7 @@ import (
 	"github.com/rs/xid"
 
 	"github.com/Karzoug/meower-common-go/auth"
+
 	"github.com/Karzoug/meower-post-service/internal/delivery/grpc/converter"
 	gen "github.com/Karzoug/meower-post-service/internal/delivery/grpc/gen/post/v1"
 	"github.com/Karzoug/meower-post-service/internal/post/service"
@@ -118,10 +119,10 @@ func (h handlers) ListPosts(ctx context.Context, req *gen.ListPostsRequest) (*ge
 	}
 
 	token := xid.NilID()
-	if len(req.PageToken) != 0 {
-		tkn, err := xid.FromString(req.PageToken)
+	if len(req.NextPageToken) != 0 {
+		tkn, err := xid.FromString(req.NextPageToken)
 		if err != nil {
-			return nil, status.Error(codes.InvalidArgument, "invalid page token: "+req.PageToken)
+			return nil, status.Error(codes.InvalidArgument, "invalid page token: "+req.NextPageToken)
 		}
 		token = tkn
 	}
@@ -165,10 +166,10 @@ func (h handlers) ListPostIdProjections(ctx context.Context, req *gen.ListPostId
 	}
 
 	token := xid.NilID()
-	if len(req.PageToken) != 0 {
-		tkn, err := xid.FromString(req.PageToken)
+	if len(req.NextPageToken) != 0 {
+		tkn, err := xid.FromString(req.NextPageToken)
 		if err != nil {
-			return nil, status.Error(codes.InvalidArgument, "invalid page token: "+req.PageToken)
+			return nil, status.Error(codes.InvalidArgument, "invalid page token: "+req.NextPageToken)
 		}
 		token = tkn
 	}
